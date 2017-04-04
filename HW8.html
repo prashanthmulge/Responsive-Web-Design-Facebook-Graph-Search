@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Navbar Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="hw8.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            display: table;
+            font-family: ariel;
+            width: 95%;
+            height: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            font-family: Helvetica, sans-serif;
+        }
+        
+        .container {
+            display: table-cell;
+            text-align: center;
+        }
+        
+        #searchText {
+            padding-left: 0;
+            padding-right: 0;
+            display: inline;
+        }
+        
+        #searchFB {
+            background-color: aliceblue;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        
+        .navbar-nav > li >a:focus,
+        .navbar-nav > li > a:hover {
+            background-color: dodgerblue;
+            color: white;
+        }
+    </style>
+    <script>
+        var app = angular.module('myApp', []);
+        app.controller('formCtrl', function ($scope, $http) {
+
+            $scope.fbsearch = function () {
+                $scope.searchKeywordCopy = $scope.searchKeyword;
+                $http.post('hw8.php', {
+                    searchQuery: $scope.searchKeyword,
+                    stype: "User"
+                }).then(function (response) {
+                    alert(JSON.stringify(response));
+                    console.log(JSON.stringify(response));
+                    $scope.names = [{
+                        "number1": "1",
+                        "photo1": "2",
+                        "name1": "3"
+                    }]
+
+                }, function errorCallback(response) {
+                    alert("Failure");
+                });
+            };
+            //                    $.ajax({
+            //                        type: "POST",
+            //                        url: "HW8.php",
+            //                        data: ,
+            //                        success: function (data) {
+            //                            console.log(data);
+            //                            alert(data);
+            //                        },
+            //                        error: function (data) {
+            //                            console.log(data);
+            //                            alert("failure");
+            //                        }
+            //                    });
+
+            $scope.fbreset = function () {
+                $scope.searchKeywordCopy = "RESET";
+                $scope.searchKeyword = "USC";
+            }
+
+        });
+
+        //            $(document).ready(function () { // $("#submitq").click(function () { // $.ajax({ // type: "POST", // url: "HW8.php", // data: { // searchQuery: "Prashant", // stype: "User" // }, // success: function (data) { // console.log(data); // alert(data); // }, // error: function (data) { // console.log(data); // alert("failure"); // } // }); // }); // });
+    </script>
+
+    <!--   Getting current location   -->
+    <script>
+        var options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        };
+
+        function success(pos) {
+            var crd = pos.coords;
+
+            document.getElementsByClassName("output")[0].innerHTML += crd.latitude + " ";
+            document.getElementsByClassName("output")[0].innerHTML += crd.longitude + " ";
+            document.getElementsByClassName("output")[0].innerHTML += crd.accuracy;
+            console.log('Your current position is:');
+            console.log(`Latitude : ${crd.latitude}`);
+            console.log(`Longitude: ${crd.longitude}`);
+            console.log(`More or less ${crd.accuracy} meters.`);
+        };
+
+        function error(err) {
+            console.warn(`ERROR(${err.code}): ${err.message}`);
+        };
+
+        navigator.geolocation.getCurrentPosition(success, error, options);
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+        <div ng-app="myApp" ng-controller="formCtrl">
+            <form class="form-signin" id="searchFB">
+                <div class="row">
+                    <div class="col-md-3" style="padding-left: 50px; padding-right: 0; padding-top: 5px; text-align: initial;">
+                        <h2 class="form-search-heading" style="display: inline; font-size: 20px; color: dodgerblue">FB Search</h2>
+                    </div>
+                    <div class="col-md-4" style="padding-right: 0px">
+                        <input type="text" id="searchText" class="form-control" value="usc" required autofocus style="padding-right: 0px" ng-model="searchKeyword">
+                    </div>
+                    <div class="col-md-1" style="padding-left: 0px">
+                        <button class="btn btn-primary" type="submit" style="width: 80px; padding-left: 0px" ng-click="fbsearch()" id="submitq"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                    </div>
+
+                    <div class="col-md-1">
+                        <button class="btn btn-default" type="reset" style="margin-left: 10px; width: 80px;" ng-click="fbreset()">Clear</button>
+                    </div>
+                </div>
+            </form>
+
+            <ul class="nav navbar-nav" id="myTabs" style="width: 100%; padding-left: 0; padding-right: 0; border-bottom: 2px solid blue;">
+                <li class="active Users" id="Users" style="width: 20%"><a href="#">Users</a></li>
+                <li class="Pages" id="Pages" style="width: 20%"><a href="#">Pages</a></li>
+                <li class="Events" id="Events" style="width: 20%"><a href="#">Events</a></li>
+                <li class="Groups" id="Groups" style="width: 20%"><a href="#">Groups</a></li>
+                <li class="Favorites active" id="Favorites" style="width: 20%"><a href="#">Favorites</a></li>
+            </ul>
+
+            <div class="table-responsive" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
+                <table class="table" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%">#</th>
+                            <th style="width: 20%">Profile Photo</th>
+                            <th style="width: 40%">Name</th>
+                            <th style="width: 15%">Favorite</th>
+                            <th style="width: 15%">Details</th>
+                        </tr>
+                    </thead>
+
+                    <tr ng-repeat="x in names">
+                        <td>{{ x.number1 }}</td>
+                        <td>{{ x.photo1 }}</td>
+                        <td>{{ x.name1 }}</td>
+                        <td><a href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-star-empty"></span></a></td>
+                        <td><a href="#" style="color: black; border: 1px solid; padding: 5px;"><span class=' glyphicon glyphicon-chevron-right '></span></a></td>
+                    </tr>
+
+                </table>
+            </div>
+        </div>
+
+        <!--
+        <ul class="nav nav-tabs" role="tablist" id="myTabs">
+            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Home</a></li>
+            <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Profile</a></li>
+            <li role="presentation" class="active"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Messages</a></li>
+            <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
+            </ul>
+
+            <script>
+                $('#myTabs a').click(function (e) {
+                    e.preventDefault()
+                    $(this).tab('show')
+                })
+            </script>-->
+
+
+
+
+        <!-- Main component for a primary marketing message or call to action -->
+        <div class="output">
+
+        </div>
+
+
+
+        <!--        Progress Bar-->
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
+                40%
+            </div>
+        </div>
+
+
+    </div>
+    <!-- /container -->
+</body>
+
+</html>
