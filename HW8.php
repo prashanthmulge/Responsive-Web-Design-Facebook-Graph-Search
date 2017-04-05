@@ -6,10 +6,9 @@ $dis = "";
 $lat = "";
 $long = "";
 $id = "";
-$offset = 0;
+$offset = 10;
 
-if(isset($_POST['searchQuery']))
-{
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $query = $_POST['searchQuery'];
 }
 
@@ -33,17 +32,16 @@ if(isset($_POST['lat']))
     $lat = $_POST['lat'];
 }
 
-if(isset($_POST['id']))
+if(isset($_REQUEST['id']))
 {
-    $id = $_POST['id'];
+    $id = $_REQUEST['id'];
 }
 
-if(isset($_POST['offset']))
-{
+if(isset($_POST['offset'])){
     $offset = $_POST['offset'];
 }
 
-
+//print_r($_REQUEST);
 date_default_timezone_set("America/Los_Angeles");
 require_once __DIR__ . '/php-graph-sdk-5.0.0/src/Facebook/autoload.php';
 $fb = new Facebook\Facebook([
@@ -59,10 +57,10 @@ try{
     $user = $user->getGraphNode()->asArray();
 }
 catch (Facebook\Exceptions\FacebookResponseException $e) {
-    echo 'Graph return an error: ' . $e->getMessage();
+//    echo 'Graph return an error: ' . $e->getMessage();
 }
 catch (Facebook\Exceptions\FacebookSDKException $e) {
-    echo 'Facebook SDK returned an error: ' . $e->getMessage();
+//    echo 'Facebook SDK returned an error: ' . $e->getMessage();
 }
 
 try {
@@ -71,11 +69,12 @@ try {
             try {
                 $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700)');
             } catch (Facebook\Exceptions\FacebookResponseException $e) {
-                echo 'Graph return an error: ' . $e->getMessage();
+//                echo 'Graph return an error: ' . $e->getMessage();
             } catch (Facebook\Exceptions\FacebookSDKException $e) {
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+//                echo 'Facebook SDK returned an error: ' . $e->getMessage();
             }
-            $search = $response->getGraphEdge()->asArray();
+
+            $search = $response->getDecodedBody();
             echo json_encode($search);
         } else if ($stype == "Place") {
             try {
@@ -87,12 +86,12 @@ try {
                     $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700)');
                 }
             } catch (Facebook\Exceptions\FacebookResponseException $e) {
-                echo 'Graph return an error: ' . $e->getMessage();
+//                echo 'Graph return an error: ' . $e->getMessage();
             } catch (Facebook\Exceptions\FacebookSDKException $e) {
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+//                echo 'Facebook SDK returned an error: ' . $e->getMessage();
             }
 
-            $search = $response->getGraphEdge()->asArray();
+            $search = $response->getDecodedBody();
             echo json_encode($response);
         }
     }
@@ -100,15 +99,15 @@ try {
         try {
             $response = $fb->get('/' . $id . '? fields=id,name,picture.width(700).height(700),albums.limit(5){name,photos.limit(2){name, picture}},posts.limit(5)');
         } catch (Facebook\Exceptions\FacebookResponseException $e) {
-            echo 'Graph return an error: ' . $e->getMessage();
+//            echo 'Graph return an error: ' . $e->getMessage();
         } catch (Facebook\Exceptions\FacebookSDKException $e) {
-            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+//            echo 'Facebook SDK returned an error: ' . $e->getMessage();
         }
-        $search = $response->getGraphEdge()->asArray();
+        $search = $response->getDecodedBody();
         echo json_encode($response);
     }
 }
 catch (Facebook\Exceptions\FacebookAuthenticationException $e) {
-        echo 'Request returns an error: ' . $e->getMessage();
+//        echo 'Request returns an error: ' . $e->getMessage();
     }
 ?>

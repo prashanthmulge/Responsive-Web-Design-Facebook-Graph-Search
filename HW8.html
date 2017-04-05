@@ -53,42 +53,84 @@
             background-color: dodgerblue;
             color: white;
         }
+        
+        #previous,
+        #next,
+        #dataTable {
+            display: none;
+        }
     </style>
     <script>
+        window.offset = 0;
+
+        function postAndGet($scope, stype, $http) {
+            $http.post('hw8.php',
+                $.param({
+                    "searchQuery": $scope.searchKeyword,
+                    "stype": stype,
+                    "offset": window.offset
+                }), {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                }
+            ).then(function (response) {
+                    alert(JSON.stringify(response));
+                    var viewData = {
+                        employees: []
+                    }
+                    var array = {}
+                    if (response['data'] && response['data']['data']) {
+                        dataRes = response['data']['data'];
+                        for (var j = 0; j < dataRes.length; j++) {
+                            array = {
+                                "number1": j + 1,
+                                "photo1": dataRes[j]['picture']['data']['url'],
+                                "name1": dataRes[j]['name'],
+                                "id": dataRes[j]['id']
+                            }
+                            viewData.employees.push(array);
+                        }
+                    }
+                    if (response['data'] && response['data']['paging']) {
+                        pagingRes = response['data']['paging'];
+                        if (pagingRes['next']) {
+                            $('#next').show();
+                        }
+                        if (pagingRes['previous']) {
+                            $('#previous').show();
+                        }
+                    }
+
+                    console.log(viewData.employees);
+                    $scope.names = viewData.employees;
+                    $('#dataTable').show();
+                },
+                function errorCallback(response) {
+                    alert("Failure");
+                });
+        }
+
         var app = angular.module('myApp', []);
         app.controller('formCtrl', function ($scope, $http) {
 
             $scope.fbsearch = function () {
-                $scope.searchKeywordCopy = $scope.searchKeyword;
-                $http.post('hw8.php', {
-                    searchQuery: $scope.searchKeyword,
-                    stype: "User"
-                }).then(function (response) {
-                    alert(JSON.stringify(response));
-                    console.log(JSON.stringify(response));
-                    $scope.names = [{
-                        "number1": "1",
-                        "photo1": "2",
-                        "name1": "3"
-                    }]
-
-                }, function errorCallback(response) {
-                    alert("Failure");
-                });
+                postAndGet($scope, "User", $http);
             };
-            //                    $.ajax({
-            //                        type: "POST",
-            //                        url: "HW8.php",
-            //                        data: ,
-            //                        success: function (data) {
-            //                            console.log(data);
-            //                            alert(data);
-            //                        },
-            //                        error: function (data) {
-            //                            console.log(data);
-            //                            alert("failure");
-            //                        }
-            //                    });
+
+            $scope.fbnext = function () {
+                window.offset += 25;
+                postAndGet($scope, "User", $http);
+            };
+
+            $scope.fbprev = function () {
+                if (window.offset - 25 < 0) {
+                    window.offset = 0;
+                } else {
+                    window.offset -= 25;
+                }
+                postAndGet($scope, "User", $http);
+            };
 
             $scope.fbreset = function () {
                 $scope.searchKeywordCopy = "RESET";
@@ -96,6 +138,21 @@
             }
 
         });
+
+        function checkDetails(id) {
+            alert("DEtails" + id);
+            $http.post('hw8.php', {
+                searchQuery: $scope.searchKeyword,
+                stype: stype,
+                offset: window.offset,
+                id: id
+            }).then(function (response) {
+                    alert(JSON.stringify(response));
+                },
+                function errorCallback(response) {
+                    alert("Failure");
+                });
+        }
 
         //            $(document).ready(function () { // $("#submitq").click(function () { // $.ajax({ // type: "POST", // url: "HW8.php", // data: { // searchQuery: "Prashant", // stype: "User" // }, // success: function (data) { // console.log(data); // alert(data); // }, // error: function (data) { // console.log(data); // alert("failure"); // } // }); // }); // });
     </script>
@@ -160,7 +217,7 @@
 
             <div class="table-responsive" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
                 <table class="table" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
-                    <thead>
+                    <thead id="dataTable">
                         <tr>
                             <th style="width: 10%">#</th>
                             <th style="width: 20%">Profile Photo</th>
@@ -172,14 +229,17 @@
 
                     <tr ng-repeat="x in names">
                         <td>{{ x.number1 }}</td>
-                        <td>{{ x.photo1 }}</td>
+                        <td><img src="{{ x.photo1 }}" width="50px" height="50px"></td>
                         <td>{{ x.name1 }}</td>
                         <td><a href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-star-empty"></span></a></td>
-                        <td><a href="#" style="color: black; border: 1px solid; padding: 5px;"><span class=' glyphicon glyphicon-chevron-right '></span></a></td>
+                        <td><a href="#" onclick="checkDetails( {{ x.id }} )" style="color: black; border: 1px solid; padding: 5px;"><span class=' glyphicon glyphicon-chevron-right '></span></a></td>
                     </tr>
 
                 </table>
             </div>
+
+            <button class="btn btn-default" id="previous" type="button" style="margin-left: 10px; width: 80px;" ng-click="fbprev()">Previous</button>
+            <button class="btn btn-default" type="button" id="next" style="margin-left: 10px; width: 80px;" ng-click="fbnext()">Next</button>
         </div>
 
         <!--
