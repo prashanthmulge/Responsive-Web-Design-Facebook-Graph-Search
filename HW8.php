@@ -8,7 +8,7 @@ $long = "";
 $id = "";
 $offset = 10;
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if(isset($_POST['searchQuery'])) {
     $query = $_POST['searchQuery'];
 }
 
@@ -32,9 +32,9 @@ if(isset($_POST['lat']))
     $lat = $_POST['lat'];
 }
 
-if(isset($_REQUEST['id']))
+if(isset($_POST['id']))
 {
-    $id = $_REQUEST['id'];
+    $id = $_POST['id'];
 }
 
 if(isset($_POST['offset'])){
@@ -64,7 +64,7 @@ catch (Facebook\Exceptions\FacebookSDKException $e) {
 }
 
 try {
-    if(!isset($_POST['id'])) {
+    if(!$id) {
         if ($stype != "Places") {
             try {
                 $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700)');
@@ -92,11 +92,13 @@ try {
             }
 
             $search = $response->getDecodedBody();
-            echo json_encode($response);
+            echo json_encode($search);
         }
     }
     else {
+        
         try {
+//            $response = $fb->get('/' . $id . '? fields=id,name,picture.width(700).height(700),albums.limit(5){name,photos.limit(2){name, picture}},posts.limit(5)');
             $response = $fb->get('/' . $id . '? fields=id,name,picture.width(700).height(700),albums.limit(5){name,photos.limit(2){name, picture}},posts.limit(5)');
         } catch (Facebook\Exceptions\FacebookResponseException $e) {
 //            echo 'Graph return an error: ' . $e->getMessage();
@@ -104,7 +106,7 @@ try {
 //            echo 'Facebook SDK returned an error: ' . $e->getMessage();
         }
         $search = $response->getDecodedBody();
-        echo json_encode($response);
+        echo json_encode($search);
     }
 }
 catch (Facebook\Exceptions\FacebookAuthenticationException $e) {
