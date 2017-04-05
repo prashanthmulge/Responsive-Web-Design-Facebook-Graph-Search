@@ -14,8 +14,8 @@
     <!-- Bootstrap core CSS -->
     <link href="bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="hw8.css" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
 
     <style>
         html,
@@ -48,8 +48,9 @@
             padding-bottom: 5px;
         }
         
-        .navbar-nav > li >a:focus,
-        .navbar-nav > li > a:hover {
+        .nav-tabs > li >a:focus,
+        .nav-tabs > li > a:hover,
+        .nav-tabs > li.active > a {
             background-color: dodgerblue;
             color: white;
         }
@@ -62,8 +63,10 @@
     </style>
     <script>
         window.offset = 0;
+        window.stype = "user";
 
         function postAndGet($scope, stype, $http) {
+            $scope.names = {};
             $http.post('hw8.php',
                 $.param({
                     "searchQuery": $scope.searchKeyword,
@@ -75,7 +78,6 @@
                     },
                 }
             ).then(function (response) {
-                    alert(JSON.stringify(response));
                     var viewData = {
                         employees: []
                     }
@@ -84,7 +86,7 @@
                         dataRes = response['data']['data'];
                         for (var j = 0; j < dataRes.length; j++) {
                             array = {
-                                "number1": j + 1,
+                                "number1": window.offset + j + 1,
                                 "photo1": dataRes[j]['picture']['data']['url'],
                                 "name1": dataRes[j]['name'],
                                 "id": dataRes[j]['id']
@@ -96,9 +98,13 @@
                         pagingRes = response['data']['paging'];
                         if (pagingRes['next']) {
                             $('#next').show();
+                        } else {
+                            $('#next').hide();
                         }
                         if (pagingRes['previous']) {
                             $('#previous').show();
+                        } else {
+                            $('#previous').hide();
                         }
                     }
 
@@ -115,45 +121,90 @@
         app.controller('formCtrl', function ($scope, $http) {
 
             $scope.fbsearch = function () {
+                $('progressBar').value = "10%"
+                window.offset = 0;
+                window.stype = "user";
                 postAndGet($scope, "User", $http);
             };
 
             $scope.fbnext = function () {
+                $('progressBar').value = "10%"
                 window.offset += 25;
-                postAndGet($scope, "User", $http);
+                postAndGet($scope, window.stype, $http);
             };
 
             $scope.fbprev = function () {
+                $('progressBar').value = "10%"
                 if (window.offset - 25 < 0) {
                     window.offset = 0;
                 } else {
                     window.offset -= 25;
                 }
-                postAndGet($scope, "User", $http);
+                postAndGet($scope, window.stype, $http);
             };
 
             $scope.fbreset = function () {
+                window.offset = 0;
+                window.stype = "user";
+                $('progressBar').html("50%");
                 $scope.searchKeywordCopy = "RESET";
                 $scope.searchKeyword = "USC";
+                $scope.names = {};
+                $('#dataTable').hide();
+                $('#previous').hide();
+                $('#next').hide();
+                $('progressBar').html("100%");
+            }
+
+            $scope.checkDetails = function () {
+                window.stype = "user";
+                window.offset = 0;
+                $http.post('hw8.php',
+                    $.param({
+                        "id": "124984464200434"
+                    }), {
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                    }
+                ).then(function (response) {
+                        $scope.names = {};
+                        $('#dataTable').hide();
+                        $('#previous').hide();
+                        $('#next').hide();
+                        console.log(JSON.stringify(response));
+                    },
+                    function errorCallback(response) {
+                        console.log("Failure");
+                    });
+            }
+
+            $scope.userSelect = function () {
+                window.offset = 0;
+                window.stype = "user";
+                postAndGet($scope, window.stype, $http);
+            }
+            $scope.pageSelect = function () {
+                window.offset = 0;
+                window.stype = "page";
+                postAndGet($scope, window.stype, $http);
+            }
+            $scope.eventSelect = function () {
+                window.offset = 0;
+                window.stype = "event";
+                postAndGet($scope, window.stype, $http);
+            }
+            $scope.groupSelect = function () {
+                window.offset = 0;
+                window.stype = "group";
+                postAndGet($scope, window.stype, $http);
+            }
+            $scope.favoriteSelect = function () {
+                //window.offset = 0;
+                //                postAndGet($scope, "User", $http);
             }
 
         });
-
-        function checkDetails(id) {
-            alert("DEtails" + id);
-            $http.post('hw8.php', {
-                searchQuery: $scope.searchKeyword,
-                stype: stype,
-                offset: window.offset,
-                id: id
-            }).then(function (response) {
-                    alert(JSON.stringify(response));
-                },
-                function errorCallback(response) {
-                    alert("Failure");
-                });
-        }
-
         //            $(document).ready(function () { // $("#submitq").click(function () { // $.ajax({ // type: "POST", // url: "HW8.php", // data: { // searchQuery: "Prashant", // stype: "User" // }, // success: function (data) { // console.log(data); // alert(data); // }, // error: function (data) { // console.log(data); // alert("failure"); // } // }); // }); // });
     </script>
 
@@ -207,12 +258,12 @@
                 </div>
             </form>
 
-            <ul class="nav navbar-nav" id="myTabs" style="width: 100%; padding-left: 0; padding-right: 0; border-bottom: 2px solid blue;">
-                <li class="active Users" id="Users" style="width: 20%"><a href="#">Users</a></li>
-                <li class="Pages" id="Pages" style="width: 20%"><a href="#">Pages</a></li>
-                <li class="Events" id="Events" style="width: 20%"><a href="#">Events</a></li>
-                <li class="Groups" id="Groups" style="width: 20%"><a href="#">Groups</a></li>
-                <li class="Favorites active" id="Favorites" style="width: 20%"><a href="#">Favorites</a></li>
+            <ul class="nav nav-tabs" id="myTabs" style="width: 100%; padding-left: 0; padding-right: 0; border-bottom: 2px solid blue;">
+                <li class="active Users" id="Users" style="width: 20%"><a href="#" ng-click="userSelect()">Users</a></li>
+                <li class="Pages" id="Pages" style="width: 20%"><a href="#" ng-click="pageSelect()">Pages</a></li>
+                <li class="Events" id="Events" style="width: 20%"><a href="#" ng-click="eventSelect()">Events</a></li>
+                <li class="Groups" id="Groups" style="width: 20%"><a href="#" ng-click="groupSelect()">Groups</a></li>
+                <li class="Favorites" id="Favorites" style="width: 20%"><a href="#" ng-click="favoriteSelect()">Favorites</a></li>
             </ul>
 
             <div class="table-responsive" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
@@ -229,10 +280,12 @@
 
                     <tr ng-repeat="x in names">
                         <td>{{ x.number1 }}</td>
-                        <td><img src="{{ x.photo1 }}" width="50px" height="50px"></td>
+                        <td><img ng-src="{{x.photo1}}" width="50px" height="50px"></td>
                         <td>{{ x.name1 }}</td>
                         <td><a href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-star-empty"></span></a></td>
-                        <td><a href="#" onclick="checkDetails( {{ x.id }} )" style="color: black; border: 1px solid; padding: 5px;"><span class=' glyphicon glyphicon-chevron-right '></span></a></td>
+                        <td>
+                            <a ng-click="checkDetails()" style="color: black; border: 1px solid; padding: 5px;"><span class=' glyphicon glyphicon-chevron-right '></span></a>
+                        </td>
                     </tr>
 
                 </table>
@@ -269,9 +322,9 @@
 
         <!--        Progress Bar-->
         <div class="progress">
-            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
+            <p id="progressBar" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
                 40%
-            </div>
+            </p>
         </div>
 
 
