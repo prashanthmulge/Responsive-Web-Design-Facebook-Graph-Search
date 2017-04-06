@@ -96,10 +96,10 @@ try {
         }
     }
     else {
-        
+
         try {
 //            $response = $fb->get('/' . $id . '? fields=id,name,picture.width(700).height(700),albums.limit(5){name,photos.limit(2){name, picture}},posts.limit(5)');
-            $response = $fb->get('/' . $id . '? fields=id,name,picture.width(700).height(700),albums.limit(5){name,photos.limit(2){name, picture}},posts.limit(5)');
+            $response = $fb->get('/' . $id . '? fields=id,name,picture.width(700).height(700),albums.limit(5){name,photos.limit(2){images}},posts.limit(5)');
         } catch (Facebook\Exceptions\FacebookResponseException $e) {
 //            echo 'Graph return an error: ' . $e->getMessage();
         } catch (Facebook\Exceptions\FacebookSDKException $e) {

@@ -111,6 +111,7 @@
                     console.log(viewData.employees);
                     $scope.names = viewData.employees;
                     $('#dataTable').show();
+                    $('#dataTable2').show();
                 },
                 function errorCallback(response) {
                     alert("Failure");
@@ -151,35 +152,86 @@
                 $scope.searchKeyword = "USC";
                 $scope.names = {};
                 $('#dataTable').hide();
+                $('#dataTable2').hide();
                 $('#previous').hide();
                 $('#next').hide();
                 $('progressBar').html("100%");
             }
 
-            $scope.checkDetails = function () {
-                $('#dataTable').hide();
-                $('#dataTable2').hide();
-                $('#previous').hide();
-                $('#next').hide();
+            $scope.checkDetails = function (id) {
                 $http.post('hw8.php',
                     $.param({
-                        "id": "124984464200434"
+                        "id": id
                     }), {
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded'
                         },
                     }
                 ).then(function (response) {
-                        $scope.names = {};
                         $('#dataTable').hide();
+                        $('#dataTable2').hide();
                         $('#previous').hide();
                         $('#next').hide();
                         console.log(JSON.stringify(response));
+                        $('#detailsPage').show();
+                        var viewData = {
+                            employees: []
+                        }
+                        var array = {}
+                        if (response['data'] && response['data']['posts'] && response['data']['posts']['data']) {
+                            dataRes = response['data']['posts']['data'];
+                            for (var j = 0; j < dataRes.length; j++) {
+                                array = {
+                                    "image": response['data']['picture']['data']['url'],
+                                    "name": response['data']['name'],
+                                    "time": dataRes[j]['created_time'],
+                                    "post": dataRes[j]['message']
+                                }
+                                viewData.employees.push(array);
+                            }
+                            $('#PostData').show();
+                            $('#noPostData').hide();
+                        } else {
+                            $('#noPostData').show();
+                            $('#PostData').hide();
+                        }
+                        $scope.postDetails = viewData.employees;
+                        var viewData = {
+                            employees: []
+                        }
+                        if (response['data'] && response['data']['albums'] && response['data']['albums']['data']) {
+                            dataRes = response['data']['albums']['data'];
+                            for (var j = 0; j < dataRes.length; j++) {
+                                if (dataRes[j]['photos']['data'].length > 0) {
+                                    img1 = dataRes[j]['photos']['data'][0]['images'][0]['source'];
+                                } else {
+                                    img1 = "";
+                                }
+                                if (dataRes[j]['photos']['data'].length > 1) {
+                                    img2 = dataRes[j]['photos']['data'][1]['images'][0]['source'];
+                                } else {
+                                    img2 = "";
+                                }
+                                array = {
+                                    "albumName": dataRes[j]['name'],
+                                    "imgSrc1": img1,
+                                    "imgSrc2": img2,
+                                    "id": j + 1
+                                }
+                                viewData.employees.push(array);
+                            }
+                            $('#AlbumData').show();
+                            $('#noAlbumData').hide();
+                        } else {
+                            $('#noAlbumData').show();
+                            $('#AlbumData').hide();
+                        }
+                        $scope.albumDetails = viewData.employees;
+
                     },
                     function errorCallback(response) {
                         console.log("Failure");
                     });
-                $('#detailsPage').show();
             }
 
             $scope.userSelect = function () {
@@ -206,6 +258,30 @@
                 //window.offset = 0;
                 //                postAndGet($scope, "User", $http);
             }
+
+            $scope.clickBack = function () {
+                $('#dataTable').show();
+                $('#dataTable2').show();
+                $('#previous').show();
+                $('#next').show();
+                $scope.albumDetails = {}
+                $scope.postDetails = {}
+                $('#detailsPage').hide();
+                $('#noAlbumData').hide();
+                $('#AlbumData').hide();
+                $('#noPostData').hide();
+                $('#PostData').hide();
+            }
+
+            $scope.albumClick = function (id) {
+                $('#' + id).show();
+                for (var i = 1; i < 6; i++) {
+                    if (i != id) {
+                        $('#' + i).hide();
+                    }
+                }
+            }
+
 
         });
         //            $(document).ready(function () { // $("#submitq").click(function () { // $.ajax({ // type: "POST", // url: "HW8.php", // data: { // searchQuery: "Prashant", // stype: "User" // }, // success: function (data) { // console.log(data); // alert(data); // }, // error: function (data) { // console.log(data); // alert("failure"); // } // }); // }); // });
@@ -270,8 +346,8 @@
             </ul>
 
             <div class="table-responsive" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
-                <table class="table" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
-                    <thead id="dataTable">
+                <table id="dataTable" class="table" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
+                    <thead>
                         <tr>
                             <th style="width: 10%">#</th>
                             <th style="width: 20%">Profile Photo</th>
@@ -281,15 +357,16 @@
                         </tr>
                     </thead>
 
-                    <tr id="dataTable2" ng-repeat="x in names">
+                    <tr ng-repeat="x in names">
                         <td>{{ x.number1 }}</td>
                         <td><img ng-src="{{x.photo1}}" width="50px" height="50px"></td>
                         <td>{{ x.name1 }}</td>
                         <td><a href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-star-empty"></span></a></td>
                         <td>
-                            <a ng-click="checkDetails()" style="color: black; border: 1px solid; padding: 5px;"><span class=' glyphicon glyphicon-chevron-right '></span></a>
+                            <a ng-click="checkDetails(x.id)" style="color: black; border: 1px solid; padding: 5px;"><span class=' glyphicon glyphicon-chevron-right '></span></a>
                         </td>
                     </tr>
+
 
                 </table>
             </div>
@@ -297,58 +374,107 @@
             <button class="btn btn-default" id="previous" type="button" style="margin-left: 10px; width: 80px;" ng-click="fbprev()">Previous</button>
             <button class="btn btn-default" type="button" id="next" style="margin-left: 10px; width: 80px;" ng-click="fbnext()">Next</button>
 
-            <div id="detailsMainPage" style="display: inline-block; width: 100%; padding-top: 10px;">
+            <div id="detailsPage" style="display: none; width: 100%; padding-top: 10px;">
                 <div style="display: block">
-                    <div style="float: left"><a onclick="clickBack()"><span style="font-weight: bold"> <span class="glyphicon glyphicon-chevron-left"></span> Back</span></a></div>
+                    <div style="float: left"><a ng-click="clickBack()"><span style="font-weight: bold"> <span class="glyphicon glyphicon-chevron-left"></span> Back</span></a></div>
                     <div style="float: right"><span class="glyphicon glyphicon-star-empty"></span><img src="facebook.png" width="20px" height="20px"></div>
                 </div>
                 <br>
-                <div>
-                    <div id="detailsPage" class="row" style="text-align: Left; display: block">
-                        <div class="col-md-6" style="border: 1px solid;">
-                            Album
+                <br>
+                <!--                Details Page-->
+                <div class="row" style="text-align: Left">
+                    <div class="col-md-6">
+                        <div class="well-sm " style="background-color: grey ">Albums</div>
+                        <div id="noAlbumData" class="well-sm " style="border: 1px solid ">
+                            <div class="well-sm" style="background-color: yellow ">
+                                <p>No data posted</p>
+                            </div>
+                        </div>
+                        <div id="AlbumData" class="well-sm " style="border: 1px solid" ng-repeat="x in albumDetails">
+                            <a ng-click="albumClick(x.id)" class="well-sm">
+                                {{x.albumName}}
+                            </a>
+                            <div id={{x.id}} style="display: none">
+                                <div class="well-sm row">
+                                    <div class="col-sm-12">
+                                        <img ng-src="{{ x.imgSrc1 }}" style='width:100%; max-width:auto; height:auto;'>
+                                    </div>
+                                </div>
+                                <div class="well-sm row">
+                                    <div class="col-sm-12">
+                                        <img ng-src="{{ x.imgSrc2 }}" style='width:100%; max-width:auto; height:auto;'>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="well-sm " style="background-color: grey ">Posts</div>
+
+                        <div id="noPostData" class="well-sm" style="border: 1px solid;">
+                            <div class="well-sm" style="background-color: yellow ">
+                                <p> No data posted </p>
+                            </div>
                         </div>
 
-                        <div class="col-md-6" style="border: 1px solid">
-                            Post
+                        <div id="PostData" class="well-sm" style="border: 1px solid" ng-repeat="x in postDetails">
+                            <div class="well-sm">
+                                <table>
+                                    <tr>
+                                        <td rowspan="2"><img ng-src="{{ x.image }}" width="30px" height="30px"></td>
+                                        <td>
+                                            <p style="padding-left: 10px; margin-bottom: 0px; font-size: smaller; font-weight: bold;">{{ x.name }}</p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <p style="padding-left: 10px; margin-bottom: 0px; font-size: x-small; color: lightslategrey;">{{ x.time }}</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br>
+                                <p>{{ x.post }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
+    </div>
+    <!-- formCtrl -->
 
-        <!--
-        <ul class="nav nav-tabs" role="tablist" id="myTabs">
-            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">Home</a></li>
-            <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">Profile</a></li>
-            <li role="presentation" class="active"><a href="#messages" aria-controls="messages" role="tab" data-toggle="tab">Messages</a></li>
-            <li role="presentation"><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a></li>
-            </ul>
+    <!--
+        <ul class="nav nav-tabs " role="tablist " id="myTabs ">
+            <li role="presentation " class="active "><a href="#home " aria-controls="home " role="tab " data-toggle="tab ">Home</a></li>
+                            <li role="presentation "><a href="#profile " aria-controls="profile " role="tab " data-toggle="tab ">Profile</a></li>
+                            <li role="presentation " class="active "><a href="#messages " aria-controls="messages " role="tab " data-toggle="tab ">Messages</a></li>
+                            <li role="presentation "><a href="#settings " aria-controls="settings " role="tab " data-toggle="tab ">Settings</a></li>
+                            </ul>
 
-            <script>
-                $('#myTabs a').click(function (e) {
-                    e.preventDefault()
-                    $(this).tab('show')
-                })
-            </script>-->
-
-
-
-
-        <!-- Main component for a primary marketing message or call to action -->
-        <div class="output">
-
-        </div>
+                            <script>
+                                $('#myTabs a').click(function (e) {
+                                    e.preventDefault()
+                                    $(this).tab('show')
+                                })
+                            </script>-->
 
 
 
-        <!--        Progress Bar-->
-        <div class="progress">
-            <p id="progressBar" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:40%">
-                40%
-            </p>
-        </div>
+
+    <!-- Main component for a primary marketing message or call to action -->
+    <div class="output ">
+
+    </div>
+
+
+
+    <!--        Progress Bar-->
+    <div class="progress ">
+        <p id="progressBar " class="progress-bar progress-bar-striped active " role="progressbar " aria-valuenow="40 " aria-valuemin="0 " aria-valuemax="100 " style="width:40% ">
+            40%
+        </p>
+    </div>
 
 
     </div>
