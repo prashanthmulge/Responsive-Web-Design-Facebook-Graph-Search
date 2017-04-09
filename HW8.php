@@ -67,7 +67,7 @@ try {
     if(!$id) {
         if ($stype != "Places") {
             try {
-                $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700)');
+                $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700),link');
             } catch (Facebook\Exceptions\FacebookResponseException $e) {
 //                echo 'Graph return an error: ' . $e->getMessage();
             } catch (Facebook\Exceptions\FacebookSDKException $e) {
@@ -79,11 +79,11 @@ try {
         } else if ($stype == "Place") {
             try {
                 if ($lat != "" && $long != "" && $dis != "") {
-                    $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&center=' . $lat . ',' . $long . '&distance=' . $dis . '&fields=id,name,picture.width(700).height(700)');
+                    $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&center=' . $lat . ',' . $long . '&distance=' . $dis . '&fields=id,name,picture.width(700).height(700),link');
                 } else if ($lat != "" && $long != "") {
-                    $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&center=' . $lat . ',' . $long . '&fields=id,name,picture.width(700).height(700)');
+                    $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&center=' . $lat . ',' . $long . '&fields=id,name,picture.width(700).height(700),link');
                 } else {
-                    $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700)');
+                    $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700),link');
                 }
             } catch (Facebook\Exceptions\FacebookResponseException $e) {
 //                echo 'Graph return an error: ' . $e->getMessage();
