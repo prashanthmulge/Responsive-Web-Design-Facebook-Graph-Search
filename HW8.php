@@ -1,12 +1,12 @@
 <?php
 
-$query = "Prashant";
-$stype = "User";
+$query = "";
+$stype = "";
 $dis = "";
 $lat = "";
 $long = "";
 $id = "";
-$offset = 10;
+$offset = 0;
 
 if(isset($_POST['searchQuery'])) {
     $query = $_POST['searchQuery'];
