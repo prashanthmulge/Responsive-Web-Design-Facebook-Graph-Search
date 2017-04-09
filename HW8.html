@@ -14,7 +14,12 @@
     <link href="bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="hw8.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+    <!--    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>-->
+    <!--    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>-->
+    <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.1/angular-animate.js"></script>-->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-animate.js"></script>
+    <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css"></script>-->
 
     <style>
         html,
@@ -64,26 +69,22 @@
             display: none;
         }
         
-        .slide.ng-enter,
-        .slide.ng-leave {
-            -webkit-transition: all 1s ease;
-            transition: all 1s ease;
-        }
-        
-        .slide.ng-enter {
-            left: 100%;
-        }
-        
-        .slide.ng-enter-active {
+        .animate-hide {
+            transition: all linear 2s;
+            /*            line-height: 20px;*/
+            opacity: 1;
+            /*            background-color: red;*/
+            padding: 10px;
+            /*            border: 1px solid black;*/
+            /*            background: white;*/
+            /*            position: absolute;*/
             left: 0;
         }
         
-        .slide.ng-leave {
-            left: 0;
-        }
-        
-        .slide.ng-leave-active {
+        .animate-hide.ng-hide {
             left: -100%;
+            opacity: 0;
+            padding: 0 10px;
         }
     </style>
     <script>
@@ -96,9 +97,11 @@
             groups: []
         }
 
+
+
         function postAndGet($scope, stype, $http) {
             $scope.names = {};
-            $http.post('hw8.php',
+            $http.post('HW8.php',
                 $.param({
                     "searchQuery": $scope.searchKeyword,
                     "stype": stype,
@@ -119,9 +122,12 @@
                     if (response['data'] && response['data']['data']) {
                         dataRes = response['data']['data'];
                         for (var j = 0; j < dataRes.length; j++) {
-                            flag = 0;
+
+                            var i = 0,
+                                flag = 0,
+                                sKey;
                             for (; sKey = window.localStorage.key(i); i++) {
-                                if (sKey == id) {
+                                if (sKey == dataRes[j]['id']) {
                                     flag = 1;
                                 }
                             }
@@ -130,7 +136,9 @@
                                 "photo1": dataRes[j]['picture']['data']['url'],
                                 "name1": dataRes[j]['name'],
                                 "id": dataRes[j]['id'],
-                                "fav": flag
+                                "link": dataRes[j]['link'],
+                                "fav": flag,
+                                "favId": window.stype + dataRes[j]['id']
                             }
                             viewData.employees.push(array);
                         }
@@ -159,12 +167,35 @@
                 });
         }
 
-        var app = angular.module('myApp', []);
+        var app = angular.module('myApp', ["ngAnimate"]);
         app.controller('formCtrl', function ($scope, $http) {
 
             $('#dataTable').hide();
+            $('#dataTableFav').hide();
             $('#progressBar').hide();
             $('#favouriteType').hide();
+            $scope.myValue = false;
+
+            window.fbAsyncInit = function () {
+                FB.init({
+                    appId: '509778816077645',
+                    xfbml: true,
+                    version: 'v2.8'
+                });
+                FB.AppEvents.logPageView();
+            };
+
+            (function (d, s, id) {
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) {
+                    return;
+                }
+                js = d.createElement(s);
+                js.id = id;
+                js.src = "//connect.facebook.net/en_US/sdk.js";
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+
             $scope.fbsearch = function () {
                 $('#progressBar').show();
                 window.offset = 0;
@@ -207,11 +238,15 @@
                 document.getElementById("Users").className = "nav-link active";
             }
 
-            $scope.checkFavourite = function (id, name, url) {
-                flag = 0;
+            $scope.checkFavourite = function (favId, id, name, url) {
+                var i = 0,
+                    flag = 0,
+                    sKey;
                 for (; sKey = window.localStorage.key(i); i++) {
                     if (sKey == id) {
                         window.localStorage.removeItem(id);
+                        document.getElementById(favId).className = "glyphicon glyphicon-star-empty";
+                        document.getElementById(favId).style.color = "black"
                         flag = 1;
                     }
                 }
@@ -221,15 +256,33 @@
                         picture: url,
                         stype: window.stype
                     }
+                    document.getElementById(favId).className = "glyphicon glyphicon-star";
+                    document.getElementById(favId).style.color = "yellow"
                     window.localStorage.setItem(id, JSON.stringify(myObj));
                 }
             }
+            $scope.checkFavLoad = function (favId, id, name, url) {
+                var i = 0,
+                    sKey;
+                for (; sKey = window.localStorage.key(i); i++) {
+                    if (sKey == id) {
+                        document.getElementById(favId).style.color = "yellow"
+                        return "glyphicon glyphicon-star";
+
+                    }
+                }
+                return "glyphicon glyphicon-star-empty";
+            }
+
             $scope.deleteFavourite = function (id) {
                 window.localStorage.removeItem(id);
             }
 
-            $scope.checkDetails = function (id) {
-                $http.post('hw8.php',
+            $scope.checkDetails = function (id, link) {
+
+                $scope.myValue = false;
+                $scope.fbLink = link;
+                $http.post('HW8.php',
                     $.param({
                         "id": id
                     }), {
@@ -239,6 +292,7 @@
                     }
                 ).then(function (response) {
                         $('#dataTable').hide();
+                        $('#dataTableFav').hide();
                         $('#previous').hide();
                         $('#next').hide();
                         console.log(JSON.stringify(response));
@@ -385,6 +439,7 @@
             }
 
             $scope.clickBack = function () {
+                $scope.myValue = true;
                 $('#dataTable').show();
                 $('#previous').show();
                 $('#next').show();
@@ -405,6 +460,21 @@
                     }
                 }
             }
+            $scope.facebookPost = function () {
+                FB.ui({
+                    method: 'share',
+                    display: 'popup',
+                    href: $scope.fbLink,
+                }, function (response) {
+                    if (response) {
+                        alert('Posted Successfully');
+                    } else {
+                        alert('Not Posted')
+                    }
+                });
+
+            }
+
 
 
         });
@@ -445,19 +515,16 @@
         <div ng-app="myApp" ng-controller="formCtrl">
             <form class="form-signin" id="searchFB">
                 <div class="row">
-                    <div class="col-md-3" style="padding-left: 50px; padding-right: 0; padding-top: 5px; text-align: initial;">
+                    <div class="col-sm-3" style="padding-left: 50px; padding-right: 0; padding-top: 5px; text-align: initial;">
                         <h2 class="form-search-heading" style="display: inline; font-size: 20px; color: dodgerblue">FB Search</h2>
                     </div>
-                    <div class="col-md-4" style="padding-right: 0px">
+                    <div class="col-sm-9" style="padding-right: 0px">
                         <input type="text" id="searchText" class="form-control" placeholder="type something..." required autofocus style="padding-right: 0px; padding-left: 10px" ng-model="searchKeyword">
-                    </div>
-                    <div class="col-md-1" style="padding-left: 0px">
-                        <button class="btn btn-primary" type="submit" style="width: 80px; padding-left: 0px" ng-click="fbsearch()" id="submitq"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        <span><button class="btn btn-primary" type="submit" style="width: 80px; padding-left: 0px" ng-click="fbsearch()" id="submitq"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        </span>
+                        <span><button class="btn btn-default" type="reset" style="margin-left: 10px; width: 80px;" ng-click="fbreset()">Clear</button></span>
                     </div>
 
-                    <div class="col-md-1">
-                        <button class="btn btn-default" type="reset" style="margin-left: 10px; width: 80px;" ng-click="fbreset()">Clear</button>
-                    </div>
                 </div>
             </form>
 
@@ -504,12 +571,11 @@
 
                     <tr ng-repeat="x in names">
                         <td>{{ x.number1 }}</td>
-                        <!--<td><img ng-src="{{x.photo1}}" width="50px" height="50px"></td>-->
                         <td><img ng-src="{{x.photo1}}" width="50px" height="50px" style="border-radius: 100%"></td>
                         <td>{{ x.name1 }}</td>
-                        <td><a ng-click="checkFavourite(x.id, x.name1, x.photo1)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-star-empty"></span></a></td>
+                        <td><a ng-click="checkFavourite(x.favId, x.id, x.name1, x.photo1)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span id={{x.favId}} ng-class="checkFavLoad(x.favId, x.id, x.name1, x.photo1)"></span></a></td>
                         <td>
-                            <a ng-click="checkDetails(x.id)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right '></span></a>
+                            <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right '></span></a>
                         </td>
                     </tr>
 
@@ -538,7 +604,7 @@
                         <td id="tableTypeTD">{{ x.stype }}</td>
                         <td><a ng-click="deleteFavourite(x.id)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-trash"></span></a></td>
                         <td>
-                            <a ng-click="checkDetails(x.id)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right '></span></a>
+                            <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right ' ></span></a>
                         </td>
                     </tr>
 
@@ -550,10 +616,10 @@
             <button class="btn btn-default" id="previous" type="button" style="margin-left: 10px; width: 80px;" ng-click="fbprev()">Previous</button>
             <button class="btn btn-default" type="button" id="next" style="margin-left: 10px; width: 80px;" ng-click="fbnext()">Next</button>
 
-            <div id="detailsPage" ng-view class="slide" style="display: none; width: 100%; padding-top: 10px;">
+            <div id="detailsPage" class='animate-hide' style="display:none;width: 100%; padding-top: 10px;" ng-hide="myValue">
                 <div style="display: block">
                     <div style="float: left"><a ng-click="clickBack()"><span style="font-weight: bold"> <span class="glyphicon glyphicon-chevron-left"></span> Back</span></a></div>
-                    <div style="float: right"><span class="glyphicon glyphicon-star-empty"></span><img src="facebook.png" width="20px" height="20px"></div>
+                    <div style="float: right" ng-model="fbLink"><span class="glyphicon glyphicon-star-empty"></span><img src="facebook.png" width="20px" height="20px" ng-click="facebookPost()"></div>
                 </div>
                 <br>
                 <br>
