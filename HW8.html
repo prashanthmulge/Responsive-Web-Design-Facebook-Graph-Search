@@ -28,7 +28,7 @@
             padding: 0;
             display: table;
             font-family: ariel;
-            width: 95%;
+            width: 100%;
             height: 100%;
             margin-left: auto;
             margin-right: auto;
@@ -70,14 +70,16 @@
         }
         
         .animate-hide {
-            transition: all linear 2s;
-            /*            line-height: 20px;*/
+            -webkit-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+            -moz-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+            -o-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+            transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+            line-height: 20px;
             opacity: 1;
-            /*            background-color: red;*/
             padding: 10px;
-            /*            border: 1px solid black;*/
-            /*            background: white;*/
-            /*            position: absolute;*/
+            border: 1px solid black;
+            background: white;
+            position: absolute;
             left: 0;
         }
         
@@ -101,6 +103,10 @@
 
         function postAndGet($scope, stype, $http) {
             $scope.names = {};
+            if (!$scope.searchKeyword) {
+                $('#progressBar').hide();
+                return;
+            }
             $http.post('HW8.php',
                 $.param({
                     "searchQuery": $scope.searchKeyword,
@@ -174,7 +180,7 @@
             $('#dataTableFav').hide();
             $('#progressBar').hide();
             $('#favouriteType').hide();
-            $scope.myValue = false;
+            $scope.myValue = true;
 
             window.fbAsyncInit = function () {
                 FB.init({
@@ -202,13 +208,46 @@
                 window.stype = "user";
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
+                $('#dataTable').hide();
+                $('#dataTableFav').hide();
+
+                var activeElement = document.getElementsByClassName("active")[0];
+                activeElement.className = "nav-link";
+                document.getElementById("Users").className = "nav-link active";
+
                 postAndGet($scope, "User", $http);
 
             };
 
             $scope.fbnext = function () {
                 window.offset += 25;
-                postAndGet($scope, window.stype, $http);
+                if (window.stype == "favourite") {
+                    var i = window.offset,
+                        oJson = {},
+                        sKey;
+                    for (; sKey = window.localStorage.key(i); i++) {
+                        oJson = window.localStorage.getItem(sKey);
+                        array = {
+                            "number1": i + 1,
+                            "photo1": JSON.parse(oJson).picture,
+                            "name1": JSON.parse(oJson).name,
+                            "stype": JSON.parse(oJson).stype,
+                            "id": sKey,
+                            "link": JSON.parse(oJson).link
+                        }
+                        viewData.employees.push(array);
+                        if (i == window.offset + 24) {
+                            break;
+                        }
+                    }
+                    $('#previous').show();
+                    if (window.localStorage.length > window.offset + 24) {
+                        $('#next').show();
+                    }
+                    $scope.names = viewData.employees;
+                } else {
+                    postAndGet($scope, window.stype, $http);
+                }
             };
 
             $scope.fbprev = function () {
@@ -230,15 +269,17 @@
                 $('#dataTableFav').hide();
                 $('#previous').hide();
                 $('#next').hide();
+                $('#next-prev-btn').show();
                 $('#favouriteType').show();
                 $('#nonFavouriteType').hide();
-                $('#detailsPage').hide();
+                //                $('#detailsPage').hide();
+                $scope.myValue = true;
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
                 document.getElementById("Users").className = "nav-link active";
             }
 
-            $scope.checkFavourite = function (favId, id, name, url) {
+            $scope.checkFavourite = function (favId, id, name, url, link) {
                 var i = 0,
                     flag = 0,
                     sKey;
@@ -254,28 +295,36 @@
                     var myObj = {
                         name: name,
                         picture: url,
-                        stype: window.stype
+                        stype: window.stype,
+                        link: link
                     }
                     document.getElementById(favId).className = "glyphicon glyphicon-star";
                     document.getElementById(favId).style.color = "yellow"
                     window.localStorage.setItem(id, JSON.stringify(myObj));
                 }
             }
-            $scope.checkFavLoad = function (favId, id, name, url) {
-                var i = 0,
-                    sKey;
-                for (; sKey = window.localStorage.key(i); i++) {
-                    if (sKey == id) {
-                        document.getElementById(favId).style.color = "yellow"
-                        return "glyphicon glyphicon-star";
-
+            $scope.checkFavLoad = function (favId, id) {
+                if (favId) {
+                    var i = 0,
+                        sKey;
+                    for (; sKey = window.localStorage.key(i); i++) {
+                        if (sKey == id) {
+                            document.getElementById(favId).style.color = "yellow"
+                            return "glyphicon glyphicon-star";
+                        }
                     }
+                    return "glyphicon glyphicon-star-empty";
                 }
                 return "glyphicon glyphicon-star-empty";
             }
 
             $scope.deleteFavourite = function (id) {
                 window.localStorage.removeItem(id);
+                for (var j = 0; j < $scope.names.length; j++) {
+                    if (id == $scope.names[j]['id']) {
+                        $scope.names.splice(j, 1);
+                    }
+                }
             }
 
             $scope.checkDetails = function (id, link) {
@@ -291,12 +340,11 @@
                         },
                     }
                 ).then(function (response) {
-                        $('#dataTable').hide();
-                        $('#dataTableFav').hide();
-                        $('#previous').hide();
-                        $('#next').hide();
+                        //                        $('#dataTable').hide();
+                        //                        $('#dataTableFav').hide();
+                        //                        $('#next-prev-btn').hide();
                         console.log(JSON.stringify(response));
-                        $('#detailsPage').show();
+                        //                        $('#detailsPage').show();
                         var viewData = {
                             employees: []
                         }
@@ -325,12 +373,12 @@
                         if (response['data'] && response['data']['albums'] && response['data']['albums']['data']) {
                             dataRes = response['data']['albums']['data'];
                             for (var j = 0; j < dataRes.length; j++) {
-                                if (dataRes[j]['photos']['data'].length > 0) {
+                                if (dataRes[j]['photos'] && dataRes[j]['photos']['data'].length > 0) {
                                     img1 = dataRes[j]['photos']['data'][0]['images'][0]['source'];
                                 } else {
                                     img1 = "";
                                 }
-                                if (dataRes[j]['photos']['data'].length > 1) {
+                                if (dataRes[j]['photos'] && dataRes[j]['photos']['data'].length > 1) {
                                     img2 = dataRes[j]['photos']['data'][1]['images'][0]['source'];
                                 } else {
                                     img2 = "";
@@ -359,9 +407,11 @@
 
             $scope.userSelect = function () {
                 window.offset = 0;
+                $scope.myValue = true;
                 window.stype = "user";
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
+                $('#next-prev-btn').show();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -371,9 +421,11 @@
             }
             $scope.pageSelect = function () {
                 window.offset = 0;
+                $scope.myValue = true;
                 window.stype = "page";
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
+                $('#next-prev-btn').show();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -383,9 +435,11 @@
             }
             $scope.eventSelect = function () {
                 window.offset = 0;
+                $scope.myValue = true;
                 window.stype = "event";
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
+                $('#next-prev-btn').show();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -395,9 +449,11 @@
             }
             $scope.groupSelect = function () {
                 window.offset = 0;
+                $scope.myValue = true;
                 window.stype = "group";
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
+                $('#next-prev-btn').show();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -406,12 +462,13 @@
                 postAndGet($scope, window.stype, $http);
             }
             $scope.favouriteSelect = function () {
-
                 window.offset = 0;
+                $scope.myValue = true;
                 window.stype = "favourite";
                 $('#favouriteType').show();
                 $('#nonFavouriteType').hide();
                 $('#dataTableFav').show();
+                $('#next-prev-btn').show();
                 var viewData = {
                     employees: []
                 }
@@ -431,21 +488,29 @@
                         "photo1": JSON.parse(oJson).picture,
                         "name1": JSON.parse(oJson).name,
                         "stype": JSON.parse(oJson).stype,
-                        "id": sKey
+                        "id": sKey,
+                        "link": JSON.parse(oJson).link
                     }
                     viewData.employees.push(array);
+                    if (i == 24) {
+                        break;
+                    }
+                }
+                if (window.localStorage.length > 25) {
+                    $('#previous').hide();
+                    $('#next').show();
                 }
                 $scope.names = viewData.employees;
             }
 
             $scope.clickBack = function () {
                 $scope.myValue = true;
-                $('#dataTable').show();
-                $('#previous').show();
-                $('#next').show();
+                //                $('#dataTable').show();
+                //                $('#dataTableFav').show();
+                //                $('#next-prev-btn').show();
                 $scope.albumDetails = {}
                 $scope.postDetails = {}
-                $('#detailsPage').hide();
+                    //                $('#detailsPage').hide();
                 $('#noAlbumData').hide();
                 $('#AlbumData').hide();
                 $('#noPostData').hide();
@@ -488,6 +553,7 @@
             timeout: 5000,
             maximumAge: 0
         };
+        navigator.geolocation.getCurrentPosition(success, error, options);
 
         function success(pos) {
             var crd = pos.coords;
@@ -504,27 +570,24 @@
         function error(err) {
             console.warn(`ERROR(${err.code}): ${err.message}`);
         };
-
-        navigator.geolocation.getCurrentPosition(success, error, options);
     </script>
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="container" style="width: 100%">
         <div ng-app="myApp" ng-controller="formCtrl">
             <form class="form-signin" id="searchFB">
                 <div class="row">
-                    <div class="col-sm-3" style="padding-left: 50px; padding-right: 0; padding-top: 5px; text-align: initial;">
+                    <div class="col-md-3" style="padding-left: 50px; padding-right: 0; padding-top: 5px; text-align: initial;">
                         <h2 class="form-search-heading" style="display: inline; font-size: 20px; color: dodgerblue">FB Search</h2>
                     </div>
-                    <div class="col-sm-9" style="padding-right: 0px">
+                    <div class="col-md-6" style="padding-right: 0px">
                         <input type="text" id="searchText" class="form-control" placeholder="type something..." required autofocus style="padding-right: 0px; padding-left: 10px" ng-model="searchKeyword">
                         <span><button class="btn btn-primary" type="submit" style="width: 80px; padding-left: 0px" ng-click="fbsearch()" id="submitq"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
                         </span>
                         <span><button class="btn btn-default" type="reset" style="margin-left: 10px; width: 80px;" ng-click="fbreset()">Clear</button></span>
                     </div>
-
                 </div>
             </form>
 
@@ -556,67 +619,71 @@
                 <p class="progress-bar progress-bar-striped active " role="progressbar " aria-valuenow="50" aria-valuemin="0 " aria-valuemax="100 " style="width:50%">
                 </p>
             </div>
+            <div class='animate-hide' ng-hide="!myValue" style="display: inline-block; width: 100%; border: none">
+                <div class="table-responsive" id="nonFavouriteType" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
+                    <table id="dataTable" class="table table-hover" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Profile Photo</th>
+                                <th>Name</th>
+                                <th>Favourite</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
 
-            <div class="table-responsive" id="nonFavouriteType" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
-                <table id="dataTable" class="table table-hover" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Profile Photo</th>
-                            <th>Name</th>
-                            <th>Favourite</th>
-                            <th>Details</th>
+                        <tr ng-repeat="x in names">
+                            <td>{{ x.number1 }}</td>
+                            <td><img ng-src="{{x.photo1}}" width="50px" height="50px" style="border-radius: 100%"></td>
+                            <td>{{ x.name1 }}</td>
+                            <td><a ng-click="checkFavourite(x.favId, x.id, x.name1, x.photo1, x.link)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span id={{x.favId}} ng-class="checkFavLoad(x.favId, x.id)"></span></a></td>
+                            <td>
+                                <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right '></span></a>
+                            </td>
                         </tr>
-                    </thead>
-
-                    <tr ng-repeat="x in names">
-                        <td>{{ x.number1 }}</td>
-                        <td><img ng-src="{{x.photo1}}" width="50px" height="50px" style="border-radius: 100%"></td>
-                        <td>{{ x.name1 }}</td>
-                        <td><a ng-click="checkFavourite(x.favId, x.id, x.name1, x.photo1)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span id={{x.favId}} ng-class="checkFavLoad(x.favId, x.id, x.name1, x.photo1)"></span></a></td>
-                        <td>
-                            <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right '></span></a>
-                        </td>
-                    </tr>
 
 
-                </table>
+                    </table>
+                </div>
+
+                <div class="table-responsive" id="favouriteType" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
+                    <table id="dataTableFav" class="table table-hover" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Profile Photo</th>
+                                <th>Name</th>
+                                <th id="tableTypeTH">Type</th>
+                                <th>Favourite</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+
+                        <tr ng-repeat="x in names">
+                            <td>{{ x.number1 }}</td>
+                            <!--<td><img ng-src="{{x.photo1}}" width="50px" height="50px"></td>-->
+                            <td><img ng-src="{{x.photo1}}" width="50px" height="50px" style="border-radius: 100%"></td>
+                            <td>{{ x.name1 }}</td>
+                            <td id="tableTypeTD">{{ x.stype }}</td>
+                            <td><a ng-click="deleteFavourite(x.id)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-trash"></span></a></td>
+                            <td>
+                                <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right ' ></span></a>
+                            </td>
+                        </tr>
+
+
+                    </table>
+                </div>
+                <div id="next-prev-btn">
+                    <button class="btn btn-default" id="previous" type="button" style="margin-left: 10px; width: 80px;" ng-click="fbprev()">Previous</button>
+                    <button class="btn btn-default" type="button" id="next" style="margin-left: 10px; width: 80px;" ng-click="fbnext()">Next</button>
+                </div>
             </div>
 
-            <div class="table-responsive" id="favouriteType" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
-                <table id="dataTableFav" class="table table-hover" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Profile Photo</th>
-                            <th>Name</th>
-                            <th id="tableTypeTH">Type</th>
-                            <th>Favourite</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-
-                    <tr ng-repeat="x in names">
-                        <td>{{ x.number1 }}</td>
-                        <!--<td><img ng-src="{{x.photo1}}" width="50px" height="50px"></td>-->
-                        <td><img ng-src="{{x.photo1}}" width="50px" height="50px" style="border-radius: 100%"></td>
-                        <td>{{ x.name1 }}</td>
-                        <td id="tableTypeTD">{{ x.stype }}</td>
-                        <td><a ng-click="deleteFavourite(x.id)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-trash"></span></a></td>
-                        <td>
-                            <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right ' ></span></a>
-                        </td>
-                    </tr>
 
 
-                </table>
-            </div>
 
-
-            <button class="btn btn-default" id="previous" type="button" style="margin-left: 10px; width: 80px;" ng-click="fbprev()">Previous</button>
-            <button class="btn btn-default" type="button" id="next" style="margin-left: 10px; width: 80px;" ng-click="fbnext()">Next</button>
-
-            <div id="detailsPage" class='animate-hide' style="display:none;width: 100%; padding-top: 10px;" ng-hide="myValue">
+            <div id="detailsPage" class='animate-hide' style="width: 100%; padding-top: 10px;" ng-hide="myValue">
                 <div style="display: block">
                     <div style="float: left"><a ng-click="clickBack()"><span style="font-weight: bold"> <span class="glyphicon glyphicon-chevron-left"></span> Back</span></a></div>
                     <div style="float: right" ng-model="fbLink"><span class="glyphicon glyphicon-star-empty"></span><img src="facebook.png" width="20px" height="20px" ng-click="facebookPost()"></div>
