@@ -1,0 +1,120 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    display: table;
+    font-family: ariel;
+    width: 100%;
+    height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: Helvetica, sans-serif;
+}
+
+.container {
+    display: table-cell;
+    text-align: center;
+}
+
+#searchText {
+    padding-left: 0;
+    padding-right: 0;
+    display: inline;
+    padding-left: 10px;
+}
+
+#searchFB {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+#fbSearchText {
+    padding-top: 5px;
+    font-size: large;
+}
+
+.nav-justified > li > .active {
+    background-color: #3b5998;
+    color: white;
+}
+
+.nav-justified > li > .active:hover {
+    background-color: #3b5998;
+}
+
+#previous,
+#next {
+    display: none;
+}
+
+.animate-hide {
+    -webkit-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+    -moz-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+    -o-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+    transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 1s;
+    line-height: 20px;
+    opacity: 1;
+    padding: 10px;
+    border: 1px solid black;
+    background: white;
+    position: absolute;
+    left: 0;
+}
+
+.animate-hide1.ng-hide {
+    left: -100%;
+    opacity: 0;
+    padding: 0 10px;
+}
+
+.animate-hide2.ng-hide {
+    left: 100%;
+    opacity: 0;
+    padding: 0 10px;
+}
+
+a {
+    color: black;
+    text-decoration: none;
+}
+
+#search_width {
+    width: 78px;
+    background-color: #3b5998;
+}
+
+@media (max-width: 767px) {
+    #search_width {
+        width: 39px;
+        background-color: #3b5998;
+    }
+}
+
+#reset_button {
+    padding-left: 16px;
+}
+
+#myTabs {
+    padding-left: 0;
+    padding-right: 0;
+    border-bottom: 2px solid #3b5998;
+}
+
+#next-prev-btn {
+    text-align: center;
+}
+
+#overallTable {
+    display: inline-block;
+    width: 100%;
+    border: none
+}
+
+#progressBar {
+    margin-top: 200px;
+    margin-left: 20px;
+    margin-right: 20px;
+    text-align: center;
+}
