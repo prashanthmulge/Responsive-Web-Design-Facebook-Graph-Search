@@ -8,12 +8,13 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Navbar Template for Bootstrap</title>
+    <title>Web Homework 8</title>
 
-    <!-- Bootstrap core CSS -->
     <link href="bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="hw8.css" rel="stylesheet">
+    <script src="moment.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <!--    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>-->
     <!--    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>-->
     <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.1/angular-animate.js"></script>-->
@@ -53,14 +54,17 @@
         }
         
         .nav-tabs > li >a:focus,
-        .nav-tabs > li > a:hover,
         .nav-tabs > li.active > a {
-            background-color: dodgerblue;
+            background-color: #3b5998;
             color: white;
         }
         
+        .nav-tabs>li>a {
+            border-radius: 0 0 0 0;
+        }
+        
         .active {
-            background-color: dodgerblue;
+            background-color: #3b5998;
             color: white;
         }
         
@@ -83,26 +87,32 @@
             left: 0;
         }
         
-        .animate-hide.ng-hide {
+        .animate-hide1.ng-hide {
             left: -100%;
             opacity: 0;
             padding: 0 10px;
+        }
+        
+        .animate-hide2.ng-hide {
+            left: -100%;
+            opacity: 0;
+            padding: 0 10px;
+        }
+        
+        a {
+            color: black;
+            text-decoration: none;
         }
     </style>
     <script>
         window.offset = 0;
         window.stype = "user";
-        var viewData = {
-            users: [],
-            pages: [],
-            events: [],
-            groups: []
-        }
-
-
+        window.detailsID;
+        window.detailsPhoto;
+        window.detailsName;
+        window.detailsLink;
 
         function postAndGet($scope, stype, $http) {
-            $scope.names = {};
             if (!$scope.searchKeyword) {
                 $('#progressBar').hide();
                 return;
@@ -119,10 +129,7 @@
                 }
             ).then(function (response) {
                     var viewData = {
-                        employees: [],
-                        pages: [],
-                        events: [],
-                        groups: []
+                        data: []
                     }
                     var array = {}
                     if (response['data'] && response['data']['data']) {
@@ -146,7 +153,7 @@
                                 "fav": flag,
                                 "favId": window.stype + dataRes[j]['id']
                             }
-                            viewData.employees.push(array);
+                            viewData.data.push(array);
                         }
                     }
                     if (response['data'] && response['data']['paging']) {
@@ -163,8 +170,8 @@
                         }
                     }
 
-                    console.log(viewData.employees);
-                    $scope.names = viewData.employees;
+                    console.log(viewData.data);
+                    $scope.names = viewData.data;
                     $('#progressBar').hide();
                     $('#dataTable').show();
                 },
@@ -210,6 +217,7 @@
                 $('#nonFavouriteType').show();
                 $('#dataTable').hide();
                 $('#dataTableFav').hide();
+                $('#overallTable').show();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -221,33 +229,7 @@
 
             $scope.fbnext = function () {
                 window.offset += 25;
-                if (window.stype == "favourite") {
-                    var i = window.offset,
-                        oJson = {},
-                        sKey;
-                    for (; sKey = window.localStorage.key(i); i++) {
-                        oJson = window.localStorage.getItem(sKey);
-                        array = {
-                            "number1": i + 1,
-                            "photo1": JSON.parse(oJson).picture,
-                            "name1": JSON.parse(oJson).name,
-                            "stype": JSON.parse(oJson).stype,
-                            "id": sKey,
-                            "link": JSON.parse(oJson).link
-                        }
-                        viewData.employees.push(array);
-                        if (i == window.offset + 24) {
-                            break;
-                        }
-                    }
-                    $('#previous').show();
-                    if (window.localStorage.length > window.offset + 24) {
-                        $('#next').show();
-                    }
-                    $scope.names = viewData.employees;
-                } else {
-                    postAndGet($scope, window.stype, $http);
-                }
+                postAndGet($scope, window.stype, $http);
             };
 
             $scope.fbprev = function () {
@@ -272,6 +254,8 @@
                 $('#next-prev-btn').show();
                 $('#favouriteType').show();
                 $('#nonFavouriteType').hide();
+                $('#overallTable').show();
+                $('#detailsPage').hide();
                 //                $('#detailsPage').hide();
                 $scope.myValue = true;
                 var activeElement = document.getElementsByClassName("active")[0];
@@ -303,6 +287,32 @@
                     window.localStorage.setItem(id, JSON.stringify(myObj));
                 }
             }
+
+            $scope.checkDetailsFav = function () {
+                var i = 0,
+                    flag = 0,
+                    sKey;
+                for (; sKey = window.localStorage.key(i); i++) {
+                    if (sKey == window.detailsID) {
+                        window.localStorage.removeItem(window.detailsID);
+                        document.getElementById("detailsFav").className = "glyphicon glyphicon-star-empty";
+                        document.getElementById("detailsFav").style.color = "black"
+                        flag = 1;
+                    }
+                }
+                if (flag == 0) {
+                    var myObj = {
+                        name: window.detailsName,
+                        picture: window.detailsPhoto,
+                        stype: window.stype,
+                        link: window.detailsLink
+                    }
+                    document.getElementById("detailsFav").className = "glyphicon glyphicon-star";
+                    document.getElementById("detailsFav").style.color = "yellow"
+                    window.localStorage.setItem(window.detailsID, JSON.stringify(myObj));
+                }
+            }
+
             $scope.checkFavLoad = function (favId, id) {
                 if (favId) {
                     var i = 0,
@@ -313,8 +323,30 @@
                             return "glyphicon glyphicon-star";
                         }
                     }
+                    document.getElementById(favId).style.color = "black"
                     return "glyphicon glyphicon-star-empty";
                 }
+                return "glyphicon glyphicon-star-empty";
+            }
+
+            $scope.albumsPanel = function (id) {
+                if (id == "collapse1") {
+                    return "panel-collapse collapse in";
+                }
+                return "panel-collapse collapse";
+            }
+
+
+            $scope.checkDetailsFavLoad = function () {
+                var i = 0,
+                    sKey;
+                for (; sKey = window.localStorage.key(i); i++) {
+                    if (sKey == window.detailsID) {
+                        document.getElementById("detailsFav").style.color = "yellow"
+                        return "glyphicon glyphicon-star";
+                    }
+                }
+                document.getElementById("detailsFav").style.color = "black"
                 return "glyphicon glyphicon-star-empty";
             }
 
@@ -328,7 +360,14 @@
             }
 
             $scope.checkDetails = function (id, link) {
-
+                $('#overallTable').hide();
+                $('#detailsPage').show();
+                $('#PostData').hide();
+                $('#noPostData').hide();
+                $('#noAlbumData').hide();
+                $('#AlbumData').hide();
+                $('#albumProgressBar').show();
+                $('#postProgressBar').show();
                 $scope.myValue = false;
                 $scope.fbLink = link;
                 $http.post('HW8.php',
@@ -340,25 +379,33 @@
                         },
                     }
                 ).then(function (response) {
-                        //                        $('#dataTable').hide();
-                        //                        $('#dataTableFav').hide();
-                        //                        $('#next-prev-btn').hide();
                         console.log(JSON.stringify(response));
-                        //                        $('#detailsPage').show();
+
                         var viewData = {
-                            employees: []
+                            album: [],
+                            post: []
                         }
                         var array = {}
+                        $('#albumProgressBar').hide();
+                        $('#postProgressBar').hide();
+                        window.detailsID = id;
+                        if (response['data']['picture'] && response['data']['picture']['data'] && response['data']['picture']['data']['url']) {
+                            window.detailsPhoto = response['data']['picture']['data']['url'];
+                        }
+                        window.detailsName = response['data']['name'];
+                        window.detailsLink = link;
                         if (response['data'] && response['data']['posts'] && response['data']['posts']['data']) {
                             dataRes = response['data']['posts']['data'];
+
                             for (var j = 0; j < dataRes.length; j++) {
+                                var dateTime = moment(dataRes[j]['created_time']).format("YYYY-MM-DD HH:mm:ss");
                                 array = {
                                     "image": response['data']['picture']['data']['url'],
                                     "name": response['data']['name'],
-                                    "time": dataRes[j]['created_time'],
+                                    "time": dateTime,
                                     "post": dataRes[j]['message']
                                 }
-                                viewData.employees.push(array);
+                                viewData.post.push(array);
                             }
                             $('#PostData').show();
                             $('#noPostData').hide();
@@ -366,10 +413,7 @@
                             $('#noPostData').show();
                             $('#PostData').hide();
                         }
-                        $scope.postDetails = viewData.employees;
-                        var viewData = {
-                            employees: []
-                        }
+                        $scope.postDetails = viewData.post;
                         if (response['data'] && response['data']['albums'] && response['data']['albums']['data']) {
                             dataRes = response['data']['albums']['data'];
                             for (var j = 0; j < dataRes.length; j++) {
@@ -387,9 +431,10 @@
                                     "albumName": dataRes[j]['name'],
                                     "imgSrc1": img1,
                                     "imgSrc2": img2,
-                                    "id": j + 1
+                                    "id": "collapse" + (j + 1),
+                                    "href": "#collapse" + (j + 1)
                                 }
-                                viewData.employees.push(array);
+                                viewData.album.push(array);
                             }
                             $('#AlbumData').show();
                             $('#noAlbumData').hide();
@@ -397,7 +442,7 @@
                             $('#noAlbumData').show();
                             $('#AlbumData').hide();
                         }
-                        $scope.albumDetails = viewData.employees;
+                        $scope.albumDetails = viewData.album;
 
                     },
                     function errorCallback(response) {
@@ -412,6 +457,8 @@
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
                 $('#next-prev-btn').show();
+                $('#overallTable').show();
+                $('#detailsPage').hide();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -426,6 +473,8 @@
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
                 $('#next-prev-btn').show();
+                $('#overallTable').show();
+                $('#detailsPage').hide();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -440,6 +489,8 @@
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
                 $('#next-prev-btn').show();
+                $('#overallTable').show();
+                $('#detailsPage').hide();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -454,6 +505,8 @@
                 $('#favouriteType').hide();
                 $('#nonFavouriteType').show();
                 $('#next-prev-btn').show();
+                $('#overallTable').show();
+                $('#detailsPage').hide();
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
@@ -469,15 +522,16 @@
                 $('#nonFavouriteType').hide();
                 $('#dataTableFav').show();
                 $('#next-prev-btn').show();
+                $('#overallTable').show();
+                $('#detailsPage').hide();
                 var viewData = {
-                    employees: []
+                    data: []
                 }
 
                 var activeElement = document.getElementsByClassName("active")[0];
                 activeElement.className = "nav-link";
                 document.getElementById("Favourites").className = "nav-link active";
 
-                $scope.names = {};
                 var i = 0,
                     oJson = {},
                     sKey;
@@ -491,16 +545,11 @@
                         "id": sKey,
                         "link": JSON.parse(oJson).link
                     }
-                    viewData.employees.push(array);
-                    if (i == 24) {
-                        break;
-                    }
+                    viewData.data.push(array);
                 }
-                if (window.localStorage.length > 25) {
-                    $('#previous').hide();
-                    $('#next').show();
-                }
-                $scope.names = viewData.employees;
+                $('#previous').hide();
+                $('#next').hide();
+                $scope.names = viewData.data;
             }
 
             $scope.clickBack = function () {
@@ -510,11 +559,35 @@
                 //                $('#next-prev-btn').show();
                 $scope.albumDetails = {}
                 $scope.postDetails = {}
-                    //                $('#detailsPage').hide();
+                $('#detailsPage').hide();
                 $('#noAlbumData').hide();
                 $('#AlbumData').hide();
                 $('#noPostData').hide();
                 $('#PostData').hide();
+                $('#overallTable').show();
+                $('#albumProgressBar').show();
+                $('#postProgressBar').show();
+                if (window.stype == "favourite") {
+                    var viewData = {
+                        data: []
+                    }
+                    var i = 0,
+                        oJson = {},
+                        sKey;
+                    for (; sKey = window.localStorage.key(i); i++) {
+                        oJson = window.localStorage.getItem(sKey);
+                        array = {
+                            "number1": i + 1,
+                            "photo1": JSON.parse(oJson).picture,
+                            "name1": JSON.parse(oJson).name,
+                            "stype": JSON.parse(oJson).stype,
+                            "id": sKey,
+                            "link": JSON.parse(oJson).link
+                        }
+                        viewData.data.push(array);
+                    }
+                    $scope.names = viewData.data;
+                }
             }
 
             $scope.albumClick = function (id) {
@@ -577,21 +650,21 @@
 
     <div class="container" style="width: 100%">
         <div ng-app="myApp" ng-controller="formCtrl">
-            <form class="form-signin" id="searchFB">
+            <form class="form-signin responsive" id="searchFB">
                 <div class="row">
                     <div class="col-md-3" style="padding-left: 50px; padding-right: 0; padding-top: 5px; text-align: initial;">
-                        <h2 class="form-search-heading" style="display: inline; font-size: 20px; color: dodgerblue">FB Search</h2>
+                        <h2 class="form-search-heading" style="display: inline; font-size: 20px; color: #3b5998">FB Search</h2>
                     </div>
                     <div class="col-md-6" style="padding-right: 0px">
                         <input type="text" id="searchText" class="form-control" placeholder="type something..." required autofocus style="padding-right: 0px; padding-left: 10px" ng-model="searchKeyword">
-                        <span><button class="btn btn-primary" type="submit" style="width: 80px; padding-left: 0px" ng-click="fbsearch()" id="submitq"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        <span><button class="btn btn-primary" type="submit" style="width: 80px; padding-left: 0px;background-color: #3b5998" ng-click="fbsearch()" id="submitq"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
                         </span>
                         <span><button class="btn btn-default" type="reset" style="margin-left: 10px; width: 80px;" ng-click="fbreset()">Clear</button></span>
                     </div>
                 </div>
             </form>
 
-            <ul class="nav nav-tabs" id="myTabs" style="width: 100%; padding-left: 0; padding-right: 0; border-bottom: 2px solid blue;">
+            <ul class="nav nav-tabs" id="myTabs" style="width: 100%; padding-left: 0; padding-right: 0; border-bottom: 2px solid #3b5998;">
                 <!--<li class="active Users" id="Users" style="width: 20%"><a href="#" ng-click="userSelect()">Users</a></li>
                 <li class="Pages" id="Pages" style="width: 20%"><a href="#" ng-click="pageSelect()">Pages</a></li>
                 <li class="Events" id="Events" style="width: 20%"><a href="#" ng-click="eventSelect()">Events</a></li>
@@ -599,19 +672,19 @@
                 <li class="Favorites" id="Favorites" style="width: 20%"><a href="#" ng-click="favoriteSelect()">Favorites</a></li>-->
 
                 <li class="nav-item" style="width: 20%">
-                    <a class="nav-link active" id="Users" href="#" ng-click="userSelect()">Users</a>
+                    <a class="nav-link active" id="Users" ng-click="userSelect()">Users</a>
                 </li>
                 <li class="nav-item" style="width: 20%">
-                    <a class="nav-link" id="Pages" href="#" ng-click="pageSelect()">Pages</a>
+                    <a class="nav-link" id="Pages" ng-click="pageSelect()">Pages</a>
                 </li>
                 <li class="nav-item" style="width: 20%">
-                    <a class="nav-link" id="Events" href="#" ng-click="eventSelect()">Events</a>
+                    <a class="nav-link" id="Events" ng-click="eventSelect()">Events</a>
                 </li>
                 <li class="nav-item" style="width: 20%">
-                    <a class="nav-link" id="Groups" href="#" ng-click="groupSelect()">Groups</a>
+                    <a class="nav-link" id="Groups" ng-click="groupSelect()">Groups</a>
                 </li>
                 <li class="nav-item" style="width: 20%">
-                    <a class="nav-link" id="Favourites" href="#" ng-click="favouriteSelect()">Favourites</a>
+                    <a class="nav-link" id="Favourites" ng-click="favouriteSelect()">Favourites</a>
                 </li>
             </ul>
 
@@ -619,7 +692,7 @@
                 <p class="progress-bar progress-bar-striped active " role="progressbar " aria-valuenow="50" aria-valuemin="0 " aria-valuemax="100 " style="width:50%">
                 </p>
             </div>
-            <div class='animate-hide' ng-hide="!myValue" style="display: inline-block; width: 100%; border: none">
+            <div id="overallTable" class='animate-hide animate-hide2' ng-hide="!myValue" style="display: inline-block; width: 100%; border: none">
                 <div class="table-responsive" id="nonFavouriteType" style="display: inline-block; align-content: center; text-align: center; width: 100%; padding-top: 10px;">
                     <table id="dataTable" class="table table-hover" style="margin-top: 10px; width: 98%; text-align: initial; display: inline-table;">
                         <thead>
@@ -636,7 +709,7 @@
                             <td>{{ x.number1 }}</td>
                             <td><img ng-src="{{x.photo1}}" width="50px" height="50px" style="border-radius: 100%"></td>
                             <td>{{ x.name1 }}</td>
-                            <td><a ng-click="checkFavourite(x.favId, x.id, x.name1, x.photo1, x.link)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span id={{x.favId}} ng-class="checkFavLoad(x.favId, x.id)"></span></a></td>
+                            <td><a ng-click="checkFavourite(x.favId, x.id, x.name1, x.photo1, x.link)" style="color: black; border: 1px solid; padding: 5px;"><span id={{x.favId}} ng-class="checkFavLoad(x.favId, x.id)"></span></a></td>
                             <td>
                                 <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right '></span></a>
                             </td>
@@ -665,7 +738,7 @@
                             <td><img ng-src="{{x.photo1}}" width="50px" height="50px" style="border-radius: 100%"></td>
                             <td>{{ x.name1 }}</td>
                             <td id="tableTypeTD">{{ x.stype }}</td>
-                            <td><a ng-click="deleteFavourite(x.id)" href="#" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-trash"></span></a></td>
+                            <td><a ng-click="deleteFavourite(x.id)" style="color: black; border: 1px solid; padding: 5px;"><span class="glyphicon glyphicon-trash"></span></a></td>
                             <td>
                                 <a ng-click="checkDetails(x.id, x.link)" style="color: black; border: 1px solid; padding: 5px; cursor: pointer"><span class=' glyphicon glyphicon-chevron-right ' ></span></a>
                             </td>
@@ -683,35 +756,49 @@
 
 
 
-            <div id="detailsPage" class='animate-hide' style="width: 100%; padding-top: 10px;" ng-hide="myValue">
+            <div id="detailsPage" class='animate-hide animate-hide1' style="width: 100%; padding-top: 10px; border: none" ng-hide="myValue">
                 <div style="display: block">
-                    <div style="float: left"><a ng-click="clickBack()"><span style="font-weight: bold"> <span class="glyphicon glyphicon-chevron-left"></span> Back</span></a></div>
-                    <div style="float: right" ng-model="fbLink"><span class="glyphicon glyphicon-star-empty"></span><img src="facebook.png" width="20px" height="20px" ng-click="facebookPost()"></div>
+                    <div style="float: left"><a ng-click="clickBack()" style="border:"><span style="font-weight: bold"> <span class="glyphicon glyphicon-chevron-left"></span> Back</span></a></div>
+                    <div style="float: right" ng-model="fbLink">
+                        <a style="padding-right: 30px"><span id="detailsFav" ng-click="checkDetailsFav()" ng-class="checkDetailsFavLoad()"></span></a>
+                        <a style="padding-right: 20px"><img src="facebook.png" width="20px" height="20px" ng-click="facebookPost()"></a>
+                    </div>
                 </div>
                 <br>
                 <br>
                 <!--                Details Page-->
                 <div class="row" style="text-align: Left">
                     <div class="col-md-6">
-                        <div class="well-sm " style="background-color: grey ">Albums</div>
-                        <div id="noAlbumData" class="well-sm " style="border: 1px solid ">
-                            <div class="well-sm" style="background-color: yellow ">
-                                <p>No data posted</p>
+                        <div class="well-sm " style="background-color: lightgrey; border-bottom-right-radius: 0px; border-bottom-left-radius: 0px;">Albums</div>
+                        <div class="panel-group well-sm" id="accordion" style="border: 1px solid;border-top-right-radius: 0px;border-top-left-radius: 0px;">
+                            <div class="progress" id="albumProgressBar" style="margin-top: 20px">
+                                <p class="progress-bar progress-bar-striped active " role="progressbar " aria-valuenow="50" aria-valuemin="0 " aria-valuemax="100 " style="width:50%">
+                                </p>
                             </div>
-                        </div>
-                        <div id="AlbumData" class="well-sm " style="border: 1px solid" ng-repeat="x in albumDetails">
-                            <a ng-click="albumClick(x.id)" class="well-sm">
-                                {{x.albumName}}
-                            </a>
-                            <div id={{x.id}} style="display: none">
-                                <div class="well-sm row">
-                                    <div class="col-sm-12">
-                                        <img ng-src="{{ x.imgSrc1 }}" style='width:100%; max-width:auto; height:auto;'>
-                                    </div>
+
+                            <div id="noAlbumData">
+                                <div class="well-sm" style="background-color: #faebcd ">
+                                    <p>No data posted</p>
                                 </div>
-                                <div class="well-sm row">
-                                    <div class="col-sm-12">
-                                        <img ng-src="{{ x.imgSrc2 }}" style='width:100%; max-width:auto; height:auto;'>
+                            </div>
+                            <div id="AlbumData" class="panel panel-default" ng-repeat="x in albumDetails">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordion" href={{x.href}}>{{x.albumName}}</a>
+                                    </h4>
+                                </div>
+                                <div id={{x.id}} ng-class="albumsPanel(x.id)">
+                                    <div class="panel-body">
+                                        <div class="well-sm row">
+                                            <div class="col-sm-12">
+                                                <img ng-src="{{ x.imgSrc1 }}" style='width:100%; max-width:auto; height:auto;'>
+                                            </div>
+                                        </div>
+                                        <div class="well-sm row">
+                                            <div class="col-sm-12">
+                                                <img ng-src="{{ x.imgSrc2 }}" style='width:100%; max-width:auto; height:auto;'>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -719,16 +806,22 @@
                     </div>
 
                     <div class="col-md-6">
-                        <div class="well-sm " style="background-color: grey ">Posts</div>
+                        <div class="well-sm " style="background-color: lightgrey; border-bottom-right-radius: 0px; border-bottom-left-radius: 0px; ">Posts</div>
+                        <div id="postProgressBar" class="well-sm" style="border: 1px solid">
+                            <div class="progress" style="margin-top: 20px">
+                                <p class="progress-bar progress-bar-striped active well-sm" role="progressbar " aria-valuenow="50" aria-valuemin="0 " aria-valuemax="100 " style="width:50%">
+                                </p>
+                            </div>
+                        </div>
 
                         <div id="noPostData" class="well-sm" style="border: 1px solid;">
-                            <div class="well-sm" style="background-color: yellow ">
+                            <div class="well-sm" style="background-color: #faebcd">
                                 <p> No data posted </p>
                             </div>
                         </div>
 
-                        <div id="PostData" class="well-sm" style="border: 1px solid" ng-repeat="x in postDetails">
-                            <div class="well-sm">
+                        <div id="PostData" class="well-sm" style="border: 1px solid;border-top-right-radius: 0px; border-top-left-radius: 0px;" ng-repeat="x in postDetails">
+                            <div class="well-sm table-responsive">
                                 <table>
                                     <tr>
                                         <td rowspan="2"><img ng-src="{{ x.image }}" width="30px" height="30px"></td>
