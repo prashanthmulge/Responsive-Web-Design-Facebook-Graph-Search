@@ -78,9 +78,7 @@ try {
             echo json_encode($search);
         } else if ($stype == "Place") {
             try {
-                if ($lat != "" && $long != "" && $dis != "") {
-                    $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&center=' . $lat . ',' . $long . '&distance=' . $dis . '&fields=id,name,picture.width(700).height(700),link');
-                } else if ($lat != "" && $long != "") {
+                if ($lat != 0 && $long != 0) {
                     $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&center=' . $lat . ',' . $long . '&fields=id,name,picture.width(700).height(700),link');
                 } else {
                     $response = $fb->get('/search?offset=' . $offset . '&limit=25&q=' . $query . '&type=' . $stype . '&fields=id,name,picture.width(700).height(700),link');
